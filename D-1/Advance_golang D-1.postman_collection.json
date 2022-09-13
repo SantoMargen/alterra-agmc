@@ -219,20 +219,34 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "apikey"
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://testnet.binance.vision/api/v1/klines",
-							"protocol": "https",
+							"raw": "{{URL_BINANCE}}/api/v1/klines?symbol=BTCUSDT&limit=1000&interval=1m",
 							"host": [
-								"testnet",
-								"binance",
-								"vision"
+								"{{URL_BINANCE}}"
 							],
 							"path": [
 								"api",
 								"v1",
 								"klines"
+							],
+							"query": [
+								{
+									"key": "symbol",
+									"value": "BTCUSDT"
+								},
+								{
+									"key": "limit",
+									"value": "1000"
+								},
+								{
+									"key": "interval",
+									"value": "1m"
+								}
 							]
 						}
 					},
@@ -338,7 +352,7 @@
 					"response": []
 				},
 				{
-					"name": "Get BTCUSDT klines data with 1 day interval, start from 1 September 2022 to 7 September 2022 (UTC) Copy",
+					"name": "GET Get information of your account",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -402,9 +416,6 @@
 						}
 					],
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [
 							{
