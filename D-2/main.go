@@ -1,8 +1,13 @@
 package main
 
 import (
+	"D-2/config"
 	"D-2/routes"
 )
+
+func init() {
+	config.InitDB()
+}
 
 func main() {
 	// create a new echo instance
