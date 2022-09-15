@@ -17,10 +17,10 @@ func New() *echo.Echo {
 	v1Books.GET("/:id", controllers.GetBooksById)
 	v1Books.PUT("/:id", controllers.EditPriceBook)
 	v1Books.DELETE("/:id", controllers.DeleteBook)
-	v1Users.GET("", controllers.GetAllUser)
+	v1Users.GET("", controllers.GetAllUserController)
 	v1Users.GET("/:id", controllers.GetUserById)
 	v1Users.PUT("/:id", controllers.UpdateUser)
-	v1Users.POST("", controllers.Createuser)
+	v1Users.POST("", controllers.CreateUser)
 	v1Users.DELETE("/:id", controllers.DeleteUser)
 
 	return route

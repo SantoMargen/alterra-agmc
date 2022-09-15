@@ -1,21 +1,22 @@
 package controllers
 
 import (
-	"D-2/config"
+	"D-2/lib/database"
 	"D-2/models"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
 
-func GetAllUser(c echo.Context) error {
-	var users []models.User
-	if err := config.DB.Find(&users).Error; err != nil {
+func GetAllUserController(c echo.Context) error {
+	users, err := database.GetUsers()
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	// var users []models.User
+	// if err := config.DB.Find(&users).Error; err != nil {
+	// }
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "success",
 		"code":    http.StatusOK,
@@ -24,12 +25,9 @@ func GetAllUser(c echo.Context) error {
 }
 
 func GetUserById(c echo.Context) error {
-	var user models.User
-	userId, err := strconv.Atoi(c.Param("id"))
+	userId, _ := strconv.Atoi(c.Param("id"))
+	user, err := database.GetDetailUser(userId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	if err := config.DB.Find(&user, userId).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -39,15 +37,16 @@ func GetUserById(c echo.Context) error {
 	})
 }
 
-func Createuser(c echo.Context) error {
+func CreateUser(c echo.Context) error {
 	user := models.User{}
 	c.Bind(&user)
-	if err := config.DB.Save(&user).Error; err != nil {
+	newUser, err := database.CreateNewUser(user)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	return c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"message": "success create new user",
-		"user":    user,
+		"user":    newUser,
 	})
 }
 
@@ -57,26 +56,16 @@ func UpdateUser(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	body, err := ioutil.ReadAll(c.Request().Body)
+	c.Bind(&user)
+	updatedUser, err := database.UserUpdate(userId, user)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"status":  "error",
-			"code":    http.StatusBadRequest,
-			"message": "Cannot parse payload",
-		})
-	}
-	userIput := models.User{}
-	json.Unmarshal(body, &userIput)
-
-	config.DB.First(&user, userId)
-	if err := config.DB.Model(&user).Updates(userIput).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "success",
 		"code":    http.StatusOK,
-		"user":    user,
+		"user":    updatedUser,
 	})
 }
 
@@ -87,21 +76,14 @@ func DeleteUser(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	config.DB.First(&user, userId)
-
-	if err := config.DB.Delete(&user).Error; err != nil {
+	deletedUser, err := database.DeletedUserById(userId, user)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	/*
-		Hard Delete
-			if err := config.DB.Unscoped().Delete(&user, "id = ? ", userId).Error; err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-			}
-	*/
 
+	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "user Has been deleted",
-		"code":    http.StatusOK,
-		"data":    nil,
+		"message":     "user Has been deleted",
+		"code":        http.StatusOK,
+		"userDeleted": deletedUser,
 	})
 }
