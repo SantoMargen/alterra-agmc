@@ -4,13 +4,14 @@ import (
 	"D-2/config"
 	m "D-2/middlewares"
 	"D-2/routes"
+
+	"github.com/joho/godotenv"
 )
 
-func init() {
-	config.InitDB()
-}
-
 func main() {
+	godotenv.Load(".env")
+	config.InitDB()
+
 	// create a new echo instance
 	app := routes.New()
 	m.LogMiddleware(app)

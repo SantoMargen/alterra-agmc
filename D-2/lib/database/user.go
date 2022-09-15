@@ -2,6 +2,7 @@ package database
 
 import (
 	"D-2/config"
+	"D-2/middlewares"
 	"D-2/models"
 	"log"
 )
@@ -44,4 +45,15 @@ func DeletedUserById(userId int, user models.User) (models.User, error) {
 		return user, err
 	}
 	return user, nil
+}
+
+func LoginUser(user models.User) (*string, error) {
+	if err := config.DB.Where("email=? AND password=?", user.Email, user.Password).Error; err != nil {
+		return nil, err
+	}
+	token, err := middlewares.CreateToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &token, nil
 }
