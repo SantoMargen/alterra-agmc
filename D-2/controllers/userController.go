@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetAllUserController(c echo.Context) error {
+func V1GetAllUserController(c echo.Context) error {
 	users, err := database.GetUsers()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -24,7 +24,7 @@ func GetAllUserController(c echo.Context) error {
 	})
 }
 
-func GetUserById(c echo.Context) error {
+func V1GetUserById(c echo.Context) error {
 	userId, _ := strconv.Atoi(c.Param("id"))
 	user, err := database.GetDetailUser(userId)
 	if err != nil {
@@ -37,7 +37,7 @@ func GetUserById(c echo.Context) error {
 	})
 }
 
-func CreateUser(c echo.Context) error {
+func V1CreateUser(c echo.Context) error {
 	user := models.User{}
 	c.Bind(&user)
 	newUser, err := database.CreateNewUser(user)
@@ -50,7 +50,7 @@ func CreateUser(c echo.Context) error {
 	})
 }
 
-func UpdateUser(c echo.Context) error {
+func V1UpdateUser(c echo.Context) error {
 	user := models.User{}
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -69,7 +69,7 @@ func UpdateUser(c echo.Context) error {
 	})
 }
 
-func DeleteUser(c echo.Context) error {
+func V1DeleteUser(c echo.Context) error {
 	user := models.User{}
 	userId, err := strconv.Atoi(c.Param("id"))
 
@@ -85,5 +85,25 @@ func DeleteUser(c echo.Context) error {
 		"message":     "user Has been deleted",
 		"code":        http.StatusOK,
 		"userDeleted": deletedUser,
+	})
+}
+
+func V1LoginUser(c echo.Context) error {
+	user := models.User{}
+	if err := c.Bind(&user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := c.Validate(user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "emmail/password invalid"})
+	}
+	token, err := database.LoginUser(user)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":      "Login success",
+		"code":         http.StatusOK,
+		"access_token": token,
 	})
 }
