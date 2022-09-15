@@ -2,6 +2,7 @@ package main
 
 import (
 	"D-2/config"
+	m "D-2/middlewares"
 	"D-2/routes"
 )
 
@@ -12,7 +13,7 @@ func init() {
 func main() {
 	// create a new echo instance
 	app := routes.New()
-
+	m.LogMiddleware(app)
 	// Route / to handler function
 
 	// password := []byte("Hello, password")
@@ -29,4 +30,5 @@ func main() {
 	// fmt.Println(err) // nil means it is a match
 
 	app.Start(":8080")
+	app.Logger.Fatal(app.Start(":8080"))
 }
