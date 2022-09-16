@@ -2,9 +2,7 @@ package database
 
 import (
 	"D-2/config"
-	"D-2/middlewares"
 	"D-2/models"
-	"log"
 )
 
 func GetUsers() ([]models.User, error) {
@@ -18,8 +16,7 @@ func GetUsers() ([]models.User, error) {
 
 func GetDetailUser(userId int) (models.User, error) {
 	user := models.User{}
-	if err := config.DB.First(&user, userId).Find(&user, userId).Error; err != nil {
-		log.Println(err)
+	if err := config.DB.Model(&models.User{}).Where("id=?", userId).First(&user).Error; err != nil {
 		return user, err
 	}
 	return user, nil
@@ -33,9 +30,8 @@ func CreateNewUser(user models.User) (models.User, error) {
 }
 
 func UserUpdate(userId int, user models.User) (models.User, error) {
-	config.DB.First(&user, userId)
-	if err := config.DB.Model(&user).Updates(user).Error; err != nil {
-		return user, err
+	if err := config.DB.Model(&models.User{}).Where("id=?", userId).Updates(models.User{PhoneNumber: user.PhoneNumber}).First(&user).Error; err != nil {
+		return models.User{}, err
 	}
 	return user, nil
 }
@@ -47,13 +43,10 @@ func DeletedUserById(userId int, user models.User) (models.User, error) {
 	return user, nil
 }
 
-func LoginUser(user models.User) (*string, error) {
-	if err := config.DB.Where("email=? AND password=?", user.Email, user.Password).Error; err != nil {
-		return nil, err
+func LoginUser(user models.User) (models.User, error) {
+	result := models.User{}
+	if err := config.DB.Model(&models.User{}).Where("email=?", user.Email).First(&result).Error; err != nil || user.Email == "" || user.Password == "" {
+		return models.User{}, err
 	}
-	token, err := middlewares.CreateToken(user.ID)
-	if err != nil {
-		return nil, err
-	}
-	return &token, nil
+	return result, nil
 }
