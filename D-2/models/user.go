@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"D-2/helpers"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -12,4 +16,9 @@ type User struct {
 	Password    string `json:"password" validate:"required"`
 	PhoneNumber string `json:"phoneNumber"`
 	Address     string `json:"address"`
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	u.Password = helpers.HashPassword(u.Password)
+	return
 }

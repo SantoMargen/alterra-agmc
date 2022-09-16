@@ -1,11 +1,10 @@
 package config
 
 import (
+	"D-2/models"
 	"fmt"
 	"log"
 	"os"
-
-	"D-2/models"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"

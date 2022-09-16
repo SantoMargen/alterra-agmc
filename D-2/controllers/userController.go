@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"D-2/helpers"
 	"D-2/lib/database"
+	"D-2/middlewares"
 	"D-2/models"
 	"net/http"
 	"strconv"
@@ -28,7 +30,7 @@ func V1GetUserById(c echo.Context) error {
 	userId, _ := strconv.Atoi(c.Param("id"))
 	user, err := database.GetDetailUser(userId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "User not found"})
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "success",
@@ -39,7 +41,13 @@ func V1GetUserById(c echo.Context) error {
 
 func V1CreateUser(c echo.Context) error {
 	user := models.User{}
-	c.Bind(&user)
+	if err := c.Bind(&user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := c.Validate(user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "emmail/password invalid"})
+	}
 	newUser, err := database.CreateNewUser(user)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -53,10 +61,14 @@ func V1CreateUser(c echo.Context) error {
 func V1UpdateUser(c echo.Context) error {
 	user := models.User{}
 	userId, err := strconv.Atoi(c.Param("id"))
+
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "user not found"})
 	}
-	c.Bind(&user)
+	if err := c.Bind(&user); err != nil || user.PhoneNumber == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "Phone Number is Required"})
+	}
+
 	updatedUser, err := database.UserUpdate(userId, user)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -74,7 +86,7 @@ func V1DeleteUser(c echo.Context) error {
 	userId, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "user not found"})
 	}
 	deletedUser, err := database.DeletedUserById(userId, user)
 	if err != nil {
@@ -95,12 +107,18 @@ func V1LoginUser(c echo.Context) error {
 	}
 
 	if err := c.Validate(user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "emmail/password invalid"})
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "email/password invalid"})
 	}
-	token, err := database.LoginUser(user)
+	checkedUser, err := database.LoginUser(user)
+	if err != nil || !(helpers.CheckPasswordHash(user.Password, checkedUser.Password)) {
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": "email/password invalid"})
+	}
+	token, err := middlewares.CreateToken(checkedUser.ID)
+
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":      "Login success",
 		"code":         http.StatusOK,
